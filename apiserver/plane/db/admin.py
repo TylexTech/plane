@@ -11,7 +11,7 @@ class UserAdmin(BaseUserAdmin):
         (_("Personal info"), {
             "fields": (
                 "first_name",
-                "last_name", 
+                "last_name",
                 "display_name",
                 "email",
                 "mobile_number",
@@ -23,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
         (_("Extra info"), {
             "fields": (
                 "is_email_verified",
-                "theme", 
+                "theme",
                 "role",
                 "created_location",
                 "last_location",
@@ -32,7 +32,7 @@ class UserAdmin(BaseUserAdmin):
                 "is_onboarded",
                 "is_bot",
                 "token",
-                
+
                 )
             }
         ),

@@ -27,6 +27,9 @@ http {
     location /api/ {
         proxy_pass http://planebackend:8000/api/;
     }
+    location /admin/ {
+        proxy_pass http://planebackend:8000/admin/;
+    }
 
     location /admin/ {
         proxy_pass http://planebackend:8000/admin/;
