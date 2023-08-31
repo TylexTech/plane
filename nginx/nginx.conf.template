@@ -11,12 +11,16 @@ http {
         client_max_body_size ${FILE_SIZE_LIMIT};
 
         location / {
-            proxy_pass http://planefrontend:3000/;       
+            proxy_pass http://planefrontend:3000/;
         }
 
-        location /api/ {
-            proxy_pass http://planebackend:8000/api/;
-        }
+    location /api/ {
+        proxy_pass http://planebackend:8000/api/;
+    }
+
+    location /admin/ {
+        proxy_pass http://planebackend:8000/admin/;
+    }
 
         location /spaces/ {
             proxy_pass http://planedeploy:3000/spaces/;
