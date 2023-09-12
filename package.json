@@ -1,5 +1,5 @@
 {
-  "repository": "https://github.com/makeplane/plane.git",
+  "repository": "https://github.com/tylextech/plane.git",
   "license": "AGPL-3.0",
   "private": true,
   "workspaces": [
