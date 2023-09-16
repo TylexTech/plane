@@ -7,7 +7,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('db', '0042_alter_analyticview_created_by_and_more'),
-        ('db', '0042_alter_issuevote_unique_together_alter_issuevote_vote_and_more'),
     ]
 
     operations = [
