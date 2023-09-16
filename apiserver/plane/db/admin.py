@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, Workspace, WorkspaceMember, WorkspaceMemberInvite, Team, TeamMember, WorkspaceTheme, Project, ProjectMemberInvite, ProjectMember, ProjectIdentifier, ProjectFavorite, ProjectDeployBoard, ProjectPublicMember, Issue, IssueBlocker, IssueAssignee, IssueLink, IssueAttachment, IssueActivity, IssueComment, IssueProperty, Label, IssueLabel, IssueSequence, IssueSubscriber, IssueReaction, CommentReaction, IssueVote, FileAsset, SocialLoginConnection, State, Cycle, CycleIssue, CycleFavorite, IssueView, IssueViewFavorite, Module, ModuleMember, ModuleIssue, ModuleLink, ModuleFavorite, APIToken, Integration, WorkspaceIntegration, GithubRepository, GithubRepositorySync, GithubIssueSync, GithubCommentSync, SlackProjectSync, Importer, Page, PageBlock, PageFavorite, PageLabel, Estimate, EstimatePoint, Inbox, InboxIssue, AnalyticView, Notification, ExporterHistory
 
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
@@ -11,7 +12,7 @@ class UserAdmin(BaseUserAdmin):
         (_("Personal info"), {
             "fields": (
                 "first_name",
-                "last_name", 
+                "last_name",
                 "display_name",
                 "email",
                 "mobile_number",
@@ -23,7 +24,7 @@ class UserAdmin(BaseUserAdmin):
         (_("Extra info"), {
             "fields": (
                 "is_email_verified",
-                "theme", 
+                "theme",
                 "role",
                 "created_location",
                 "last_location",
@@ -32,7 +33,7 @@ class UserAdmin(BaseUserAdmin):
                 "is_onboarded",
                 "is_bot",
                 "token",
-                
+
                 )
             }
         ),
