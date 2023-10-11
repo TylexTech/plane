@@ -8,6 +8,9 @@
     "start": "next start -p 4000",
     "lint": "next lint"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
     "@blueprintjs/core": "^4.16.3",
     "@blueprintjs/popover2": "^1.13.3",
