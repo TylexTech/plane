@@ -70,6 +70,7 @@ from plane.api.views import (
     ProjectIdentifierEndpoint,
     ProjectFavoritesViewSet,
     LeaveProjectEndpoint,
+    ProjectPublicCoverImagesEndpoint,
     ## End Projects
     # Issues
     IssueViewSet,
@@ -102,8 +103,9 @@ from plane.api.views import (
     BulkEstimatePointEndpoint,
     ## End Estimates
     # Views
+    GlobalViewViewSet,
+    GlobalViewIssuesViewSet,
     IssueViewViewSet,
-    ViewIssuesEndpoint,
     IssueViewFavoriteViewSet,
     ## End Views
     # Cycles
@@ -148,12 +150,11 @@ from plane.api.views import (
     GlobalSearchEndpoint,
     IssueSearchEndpoint,
     ## End Search
-    # Gpt
+    # External
     GPTIntegrationEndpoint,
-    ## End Gpt
-    # Release Notes
     ReleaseNotesEndpoint,
-    ## End Release Notes
+    UnsplashEndpoint,
+    ## End External
     # Inbox
     InboxViewSet,
     InboxIssueViewSet,
@@ -184,7 +185,9 @@ from plane.api.views import (
     ## Exporter
     ExportIssuesEndpoint,
     ## End Exporter
-
+    # Configuration
+    ConfigurationEndpoint,
+    ## End Configuration
 )
 
 
@@ -241,7 +244,11 @@ urlpatterns = [
         UpdateUserTourCompletedEndpoint.as_view(),
         name="user-tour",
     ),
-    path("users/workspaces/<str:slug>/activities/", UserActivityEndpoint.as_view(), name="user-activities"),
+    path(
+        "users/workspaces/<str:slug>/activities/",
+        UserActivityEndpoint.as_view(),
+        name="user-activities",
+    ),
     # user workspaces
     path(
         "users/me/workspaces/",
@@ -568,6 +575,11 @@ urlpatterns = [
         LeaveProjectEndpoint.as_view(),
         name="project",
     ),
+    path(
+        "project-covers/",
+        ProjectPublicCoverImagesEndpoint.as_view(),
+        name="project-covers",
+    ),
     # End Projects
     #  States
     path(
@@ -645,9 +657,35 @@ urlpatterns = [
         name="project-view",
     ),
     path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/views/<uuid:view_id>/issues/",
-        ViewIssuesEndpoint.as_view(),
-        name="project-view-issues",
+        "workspaces/<str:slug>/views/",
+        GlobalViewViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+        name="global-view",
+    ),
+    path(
+        "workspaces/<str:slug>/views/<uuid:pk>/",
+        GlobalViewViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="global-view",
+    ),
+    path(
+        "workspaces/<str:slug>/issues/",
+        GlobalViewIssuesViewSet.as_view(
+            {
+                "get": "list",
+            }
+        ),
+        name="global-view-issues",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/user-favorite-views/",
@@ -766,11 +804,6 @@ urlpatterns = [
             }
         ),
         name="project-issue",
-    ),
-    path(
-        "workspaces/<str:slug>/issues/",
-        WorkSpaceIssuesEndpoint.as_view(),
-        name="workspace-issue",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issue-labels/",
@@ -1415,20 +1448,23 @@ urlpatterns = [
         name="project-issue-search",
     ),
     ## End Search
-    # Gpt
+    # External
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/ai-assistant/",
         GPTIntegrationEndpoint.as_view(),
         name="importer",
     ),
-    ## End Gpt
-    # Release Notes
     path(
         "release-notes/",
         ReleaseNotesEndpoint.as_view(),
         name="release-notes",
     ),
-    ## End Release Notes
+    path(
+        "unsplash/",
+        UnsplashEndpoint.as_view(),
+        name="release-notes",
+    ),
+    ## End External
     # Inbox
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/inboxes/",
@@ -1697,4 +1733,11 @@ urlpatterns = [
         name="workspace-project-boards",
     ),
     ## End Public Boards
+    # Configuration
+    path(
+        "configs/",
+        ConfigurationEndpoint.as_view(),
+        name="configuration",
+    ),
+    ## End Configuration
 ]

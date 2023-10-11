@@ -54,21 +54,10 @@ chmod +x setup.sh
 - Run setup.sh
 
 ```bash
-./setup.sh http://localhost
+./setup.sh
 ```
 
 > If running in a cloud env replace localhost with public facing IP address of the VM
-
-- Setup Tiptap Pro
-
-  Visit [Tiptap Pro](https://collab.tiptap.dev/pro-extensions) and signup (it is free).
-
-  Create a **`.npmrc`** file, copy the following and replace your registry token generated from Tiptap Pro.
-
-```
-@tiptap-pro:registry=https://registry.tiptap.dev/
-//registry.tiptap.dev/:_authToken=YOUR_REGISTRY_TOKEN
-```
 
 - Run Docker compose up
 

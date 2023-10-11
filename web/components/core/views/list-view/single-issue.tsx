@@ -6,19 +6,13 @@ import { mutate } from "swr";
 
 // services
 import issuesService from "services/issues.service";
+import trackEventServices from "services/track-event.service";
 // hooks
 import useToast from "hooks/use-toast";
 // components
-import {
-  ViewAssigneeSelect,
-  ViewDueDateSelect,
-  ViewEstimateSelect,
-  ViewIssueLabel,
-  ViewPrioritySelect,
-  ViewStartDateSelect,
-  ViewStateSelect,
-  CreateUpdateDraftIssueModal,
-} from "components/issues";
+import { ViewDueDateSelect, ViewEstimateSelect, ViewStartDateSelect } from "components/issues";
+import { LabelSelect, MembersSelect, PrioritySelect } from "components/project";
+import { StateSelect } from "components/states";
 // ui
 import { Tooltip, CustomMenu, ContextMenu } from "components/ui";
 // icons
@@ -40,8 +34,10 @@ import {
   ICurrentUserResponse,
   IIssue,
   IIssueViewProps,
+  IState,
   ISubIssueResponse,
   IUserProfileProjectSegregation,
+  TIssuePriorities,
   UserAuth,
 } from "types";
 // fetch-keys
@@ -55,6 +51,7 @@ import {
 type Props = {
   type?: string;
   issue: IIssue;
+  projectId: string;
   groupTitle?: string;
   editIssue: () => void;
   index: number;
@@ -73,6 +70,7 @@ type Props = {
 export const SingleListIssue: React.FC<Props> = ({
   type,
   issue,
+  projectId,
   editIssue,
   index,
   makeIssueCopy,
@@ -92,7 +90,7 @@ export const SingleListIssue: React.FC<Props> = ({
   const [contextMenuPosition, setContextMenuPosition] = useState<React.MouseEvent | null>(null);
 
   const router = useRouter();
-  const { workspaceSlug, projectId, cycleId, moduleId, userId } = router.query;
+  const { workspaceSlug, cycleId, moduleId, userId } = router.query;
   const isArchivedIssues = router.pathname.includes("archived-issues");
   const isDraftIssues = router.pathname?.split("/")?.[4] === "draft-issues";
 
@@ -181,6 +179,86 @@ export const SingleListIssue: React.FC<Props> = ({
     });
   };
 
+  const handleStateChange = (data: string, states: IState[] | undefined) => {
+    const oldState = states?.find((s) => s.id === issue.state);
+    const newState = states?.find((s) => s.id === data);
+
+    partialUpdateIssue(
+      {
+        state: data,
+        state_detail: newState,
+      },
+      issue
+    );
+    trackEventServices.trackIssuePartialPropertyUpdateEvent(
+      {
+        workspaceSlug,
+        workspaceId: issue.workspace,
+        projectId: issue.project_detail.id,
+        projectIdentifier: issue.project_detail.identifier,
+        projectName: issue.project_detail.name,
+        issueId: issue.id,
+      },
+      "ISSUE_PROPERTY_UPDATE_STATE",
+      user
+    );
+    if (oldState?.group !== "completed" && newState?.group !== "completed") {
+      trackEventServices.trackIssueMarkedAsDoneEvent(
+        {
+          workspaceSlug: issue.workspace_detail.slug,
+          workspaceId: issue.workspace_detail.id,
+          projectId: issue.project_detail.id,
+          projectIdentifier: issue.project_detail.identifier,
+          projectName: issue.project_detail.name,
+          issueId: issue.id,
+        },
+        user
+      );
+    }
+  };
+
+  const handleAssigneeChange = (data: any) => {
+    const newData = issue.assignees ?? [];
+
+    if (newData.includes(data)) newData.splice(newData.indexOf(data), 1);
+    else newData.push(data);
+
+    partialUpdateIssue({ assignees_list: data }, issue);
+
+    trackEventServices.trackIssuePartialPropertyUpdateEvent(
+      {
+        workspaceSlug,
+        workspaceId: issue.workspace,
+        projectId: issue.project_detail.id,
+        projectIdentifier: issue.project_detail.identifier,
+        projectName: issue.project_detail.name,
+        issueId: issue.id,
+      },
+      "ISSUE_PROPERTY_UPDATE_ASSIGNEE",
+      user
+    );
+  };
+
+  const handleLabelChange = (data: any) => {
+    partialUpdateIssue({ labels_list: data }, issue);
+  };
+
+  const handlePriorityChange = (data: TIssuePriorities) => {
+    partialUpdateIssue({ priority: data }, issue);
+    trackEventServices.trackIssuePartialPropertyUpdateEvent(
+      {
+        workspaceSlug,
+        workspaceId: issue.workspace,
+        projectId: issue.project_detail.id,
+        projectIdentifier: issue.project_detail.identifier,
+        projectName: issue.project_detail.name,
+        issueId: issue.id,
+      },
+      "ISSUE_PROPERTY_UPDATE_PRIORITY",
+      user
+    );
+  };
+
   const issuePath = isArchivedIssues
     ? `/${workspaceSlug}/projects/${issue.project}/archived-issues/${issue.id}`
     : isDraftIssues
@@ -250,7 +328,7 @@ export const SingleListIssue: React.FC<Props> = ({
       </ContextMenu>
 
       <div
-        className="flex items-center justify-between px-4 py-2.5 gap-10 border-b border-custom-border-200 bg-custom-background-100 last:border-b-0"
+        className="flex items-center justify-between px-4 py-2.5 gap-10 border-b-[0.5px] border-custom-border-100 bg-custom-background-100 last:border-b-0"
         onContextMenu={(e) => {
           e.preventDefault();
           setContextMenu(true);
@@ -274,6 +352,7 @@ export const SingleListIssue: React.FC<Props> = ({
                 type="button"
                 className="truncate text-[0.825rem] text-custom-text-100"
                 onClick={() => {
+                  if (isArchivedIssues) return router.push(issuePath);
                   if (!isDraftIssues) openPeekOverview(issue);
                   if (isDraftIssues && handleDraftIssueSelect) handleDraftIssueSelect(issue);
                 }}
@@ -290,21 +369,20 @@ export const SingleListIssue: React.FC<Props> = ({
           }`}
         >
           {properties.priority && (
-            <ViewPrioritySelect
-              issue={issue}
-              partialUpdateIssue={partialUpdateIssue}
-              position="right"
-              user={user}
-              isNotAllowed={isNotAllowed}
+            <PrioritySelect
+              value={issue.priority}
+              onChange={handlePriorityChange}
+              hideDropdownArrow
+              disabled={isNotAllowed}
             />
           )}
           {properties.state && (
-            <ViewStateSelect
-              issue={issue}
-              partialUpdateIssue={partialUpdateIssue}
-              position="right"
-              user={user}
-              isNotAllowed={isNotAllowed}
+            <StateSelect
+              value={issue.state_detail}
+              projectId={projectId}
+              onChange={handleStateChange}
+              hideDropdownArrow
+              disabled={isNotAllowed}
             />
           )}
           {properties.start_date && issue.start_date && (
@@ -323,14 +401,26 @@ export const SingleListIssue: React.FC<Props> = ({
               isNotAllowed={isNotAllowed}
             />
           )}
-          {properties.labels && <ViewIssueLabel labelDetails={issue.label_details} maxRender={3} />}
-          {properties.assignee && (
-            <ViewAssigneeSelect
-              issue={issue}
-              partialUpdateIssue={partialUpdateIssue}
-              position="right"
+          {properties.labels && (
+            <LabelSelect
+              value={issue.labels}
+              projectId={projectId}
+              onChange={handleLabelChange}
+              labelsDetails={issue.label_details}
+              hideDropdownArrow
+              maxRender={3}
               user={user}
-              isNotAllowed={isNotAllowed}
+              disabled={isNotAllowed}
+            />
+          )}
+          {properties.assignee && (
+            <MembersSelect
+              value={issue.assignees}
+              projectId={projectId}
+              onChange={handleAssigneeChange}
+              membersDetails={issue.assignee_details}
+              hideDropdownArrow
+              disabled={isNotAllowed}
             />
           )}
           {properties.estimate && issue.estimate_point !== null && (

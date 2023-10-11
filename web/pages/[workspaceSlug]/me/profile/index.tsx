@@ -253,6 +253,7 @@ const Profile: NextPage = () => {
                     placeholder="Enter your first name"
                     className="!px-3 !py-2 rounded-md font-medium"
                     autoComplete="off"
+                    maxLength={24}
                   />
                 </div>
 
@@ -266,6 +267,7 @@ const Profile: NextPage = () => {
                     placeholder="Enter your last name"
                     autoComplete="off"
                     className="!px-3 !py-2 rounded-md font-medium"
+                    maxLength={24}
                   />
                 </div>
 
@@ -296,8 +298,6 @@ const Profile: NextPage = () => {
                         buttonClassName={errors.role ? "border-red-500 bg-red-500/10" : ""}
                         width="w-full"
                         input
-                        verticalPosition="top"
-                        position="right"
                       >
                         {USER_ROLES.map((item) => (
                           <CustomSelect.Option key={item.value} value={item.value}>
@@ -360,7 +360,6 @@ const Profile: NextPage = () => {
                         }
                         options={timeZoneOptions}
                         onChange={onChange}
-                        verticalPosition="top"
                         optionsClassName="w-full"
                         input
                       />
@@ -373,7 +372,7 @@ const Profile: NextPage = () => {
 
                 <div className="flex items-center justify-between py-2">
                   <PrimaryButton type="submit" loading={isSubmitting}>
-                    {isSubmitting ? "Updating Project..." : "Update Project"}
+                    {isSubmitting ? "Updating Profile..." : "Update Profile"}
                   </PrimaryButton>
                 </div>
               </div>

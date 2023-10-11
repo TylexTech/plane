@@ -20,7 +20,7 @@ import { renderEmoji } from "helpers/emoji.helper";
 // types
 import { IIssueViewProps, IState, TIssuePriorities, TStateGroups } from "types";
 // fetch-keys
-import { PROJECT_ISSUE_LABELS, PROJECT_MEMBERS } from "constants/fetch-keys";
+import { PROJECT_ISSUE_LABELS, PROJECT_MEMBERS, WORKSPACE_LABELS } from "constants/fetch-keys";
 // constants
 import { STATE_GROUP_COLORS } from "constants/state";
 
@@ -50,14 +50,21 @@ export const BoardHeader: React.FC<Props> = ({
 
   const { displayFilters, groupedIssues } = viewProps;
 
-  console.log("dF", displayFilters);
-
   const { data: issueLabels } = useSWR(
     workspaceSlug && projectId && displayFilters?.group_by === "labels"
       ? PROJECT_ISSUE_LABELS(projectId.toString())
       : null,
     workspaceSlug && projectId && displayFilters?.group_by === "labels"
       ? () => issuesService.getIssueLabels(workspaceSlug.toString(), projectId.toString())
+      : null
+  );
+
+  const { data: workspaceLabels } = useSWR(
+    workspaceSlug && displayFilters?.group_by === "labels"
+      ? WORKSPACE_LABELS(workspaceSlug.toString())
+      : null,
+    workspaceSlug && displayFilters?.group_by === "labels"
+      ? () => issuesService.getWorkspaceLabels(workspaceSlug.toString())
       : null
   );
 
@@ -84,7 +91,10 @@ export const BoardHeader: React.FC<Props> = ({
         title = addSpaceIfCamelCase(currentState?.name ?? "");
         break;
       case "labels":
-        title = issueLabels?.find((label) => label.id === groupTitle)?.name ?? "None";
+        title =
+          [...(issueLabels ?? []), ...(workspaceLabels ?? [])]?.find(
+            (label) => label.id === groupTitle
+          )?.name ?? "None";
         break;
       case "project":
         title = projects?.find((p) => p.id === groupTitle)?.name ?? "None";
@@ -139,7 +149,9 @@ export const BoardHeader: React.FC<Props> = ({
         break;
       case "labels":
         const labelColor =
-          issueLabels?.find((label) => label.id === groupTitle)?.color ?? "#000000";
+          [...(issueLabels ?? []), ...(workspaceLabels ?? [])]?.find(
+            (label) => label.id === groupTitle
+          )?.color ?? "#000000";
         icon = (
           <span
             className="h-3.5 w-3.5 flex-shrink-0 rounded-full"

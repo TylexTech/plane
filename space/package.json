@@ -1,6 +1,6 @@
 {
   "name": "space",
-  "version": "0.0.1",
+  "version": "0.13.2",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4000",
@@ -20,7 +20,6 @@
     "@heroicons/react": "^2.0.12",
     "@mui/icons-material": "^5.14.1",
     "@mui/material": "^5.14.1",
-    "@tiptap-pro/extension-unique-id": "^2.1.0",
     "@tiptap/extension-code-block-lowlight": "^2.0.4",
     "@tiptap/extension-color": "^2.0.4",
     "@tiptap/extension-gapcursor": "^2.1.7",

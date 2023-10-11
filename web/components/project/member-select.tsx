@@ -16,9 +16,10 @@ import { PROJECT_MEMBERS } from "constants/fetch-keys";
 type Props = {
   value: any;
   onChange: (val: string) => void;
+  isDisabled?: boolean;
 };
 
-export const MemberSelect: React.FC<Props> = ({ value, onChange }) => {
+export const MemberSelect: React.FC<Props> = ({ value, onChange, isDisabled = false }) => {
   const router = useRouter();
   const { workspaceSlug, projectId } = router.query;
 
@@ -76,9 +77,9 @@ export const MemberSelect: React.FC<Props> = ({ value, onChange }) => {
         ]
       }
       maxHeight="md"
-      position="right"
       width="w-full"
       onChange={onChange}
+      disabled={isDisabled}
     />
   );
 };

@@ -8,7 +8,6 @@ import { Controller, useForm } from "react-hook-form";
 import aiService from "services/ai.service";
 // hooks
 import useToast from "hooks/use-toast";
-import useLocalStorage from "hooks/use-local-storage";
 // components
 import { GptAssistantModal } from "components/core";
 import { ParentIssuesListModal } from "components/issues";
@@ -62,11 +61,9 @@ export interface IssueFormProps {
   setActiveProject: React.Dispatch<React.SetStateAction<string | null>>;
   createMore: boolean;
   setCreateMore: React.Dispatch<React.SetStateAction<boolean>>;
-  handleClose: () => void;
   handleDiscardClose: () => void;
   status: boolean;
   user: ICurrentUserResponse | undefined;
-  setIsConfirmDiscardOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleFormDirty: (payload: Partial<IIssue> | null) => void;
   fieldsToShow: (
     | "project"
@@ -107,8 +104,6 @@ export const IssueForm: FC<IssueFormProps> = (props) => {
   const [gptAssistantModal, setGptAssistantModal] = useState(false);
   const [iAmFeelingLucky, setIAmFeelingLucky] = useState(false);
 
-  const { setValue: setValueInLocalStorage } = useLocalStorage<any>("draftedIssue", null);
-
   const editorRef = useRef<any>(null);
 
   const router = useRouter();
@@ -134,14 +129,19 @@ export const IssueForm: FC<IssueFormProps> = (props) => {
   const issueName = watch("name");
 
   const payload: Partial<IIssue> = {
-    name: getValues("name"),
-    description: getValues("description"),
-    state: getValues("state"),
-    priority: getValues("priority"),
-    assignees: getValues("assignees"),
-    target_date: getValues("target_date"),
-    labels: getValues("labels"),
-    project: getValues("project"),
+    name: watch("name"),
+    description: watch("description"),
+    description_html: watch("description_html"),
+    state: watch("state"),
+    priority: watch("priority"),
+    assignees: watch("assignees"),
+    labels: watch("labels"),
+    start_date: watch("start_date"),
+    target_date: watch("target_date"),
+    project: watch("project"),
+    parent: watch("parent"),
+    cycle: watch("cycle"),
+    module: watch("module"),
   };
 
   useEffect(() => {
@@ -571,8 +571,6 @@ export const IssueForm: FC<IssueFormProps> = (props) => {
           <div className="flex items-center gap-2">
             <SecondaryButton
               onClick={() => {
-                const data = JSON.stringify(getValues());
-                setValueInLocalStorage(data);
                 handleDiscardClose();
               }}
             >

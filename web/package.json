@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.1.0",
+  "version": "0.13.2",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
@@ -25,8 +25,8 @@
     "@nivo/line": "0.80.0",
     "@nivo/pie": "0.80.0",
     "@nivo/scatterplot": "0.80.0",
+    "@popperjs/core": "^2.11.8",
     "@sentry/nextjs": "^7.36.0",
-    "@tiptap-pro/extension-unique-id": "^2.1.0",
     "@tiptap/extension-code-block-lowlight": "^2.0.4",
     "@tiptap/extension-color": "^2.0.4",
     "@tiptap/extension-gapcursor": "^2.1.7",
@@ -73,6 +73,7 @@
     "react-hook-form": "^7.38.0",
     "react-markdown": "^8.0.7",
     "react-moveable": "^0.54.1",
+    "react-popper": "^2.3.0",
     "sharp": "^0.32.1",
     "sonner": "^0.6.2",
     "swr": "^2.1.3",

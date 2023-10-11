@@ -53,7 +53,7 @@ import { copyTextToClipboard } from "helpers/string.helper";
 // types
 import type { ICycle, IIssue, IIssueLink, linkDetails, IModule } from "types";
 // fetch-keys
-import { ISSUE_DETAILS } from "constants/fetch-keys";
+import { ISSUE_DETAILS, PROJECT_ISSUES_ACTIVITY } from "constants/fetch-keys";
 import { ContrastIcon } from "components/icons";
 
 type Props = {
@@ -480,6 +480,7 @@ export const IssueDetailsSidebar: React.FC<Props> = ({
                         },
                         false
                       );
+                      mutate(PROJECT_ISSUES_ACTIVITY(issueId as string));
                     }}
                     watch={watchIssue}
                     disabled={memberRole.isGuest || memberRole.isViewer || uneditable}
@@ -500,6 +501,7 @@ export const IssueDetailsSidebar: React.FC<Props> = ({
                         },
                         false
                       );
+                      mutate(PROJECT_ISSUES_ACTIVITY(issueId as string));
                     }}
                     watch={watchIssue}
                     disabled={memberRole.isGuest || memberRole.isViewer || uneditable}
@@ -509,17 +511,15 @@ export const IssueDetailsSidebar: React.FC<Props> = ({
                   <SidebarDuplicateSelect
                     issueId={issueId as string}
                     submitChanges={(data: any) => {
-                      mutate<IIssue>(
-                        ISSUE_DETAILS(issueId as string),
-                        (prevData) => {
-                          if (!prevData) return prevData;
-                          return {
-                            ...prevData,
-                            ...data,
-                          };
-                        },
-                        false
-                      );
+                      if (!data) return mutate(ISSUE_DETAILS(issueId as string));
+                      mutate<IIssue>(ISSUE_DETAILS(issueId as string), (prevData) => {
+                        if (!prevData) return prevData;
+                        return {
+                          ...prevData,
+                          ...data,
+                        };
+                      });
+                      mutate(PROJECT_ISSUES_ACTIVITY(issueId as string));
                     }}
                     watch={watchIssue}
                     disabled={memberRole.isGuest || memberRole.isViewer || uneditable}
@@ -529,17 +529,15 @@ export const IssueDetailsSidebar: React.FC<Props> = ({
                   <SidebarRelatesSelect
                     issueId={issueId as string}
                     submitChanges={(data: any) => {
-                      mutate<IIssue>(
-                        ISSUE_DETAILS(issueId as string),
-                        (prevData) => {
-                          if (!prevData) return prevData;
-                          return {
-                            ...prevData,
-                            ...data,
-                          };
-                        },
-                        false
-                      );
+                      if (!data) return mutate(ISSUE_DETAILS(issueId as string));
+                      mutate<IIssue>(ISSUE_DETAILS(issueId as string), (prevData) => {
+                        if (!prevData) return prevData;
+                        return {
+                          ...prevData,
+                          ...data,
+                        };
+                      });
+                      mutate(PROJECT_ISSUES_ACTIVITY(issueId as string));
                     }}
                     watch={watchIssue}
                     disabled={memberRole.isGuest || memberRole.isViewer || uneditable}
