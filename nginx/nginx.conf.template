@@ -9,7 +9,13 @@ http {
         root /www/data/;
         access_log /var/log/nginx/access.log;
 
-        client_max_body_size ${FILE_SIZE_LIMIT};
+    client_max_body_size ${FILE_SIZE_LIMIT};
+    location /admin/ {
+        proxy_pass http://planebackend:8000/admin/;
+    }
+    location /static/ {
+        proxy_pass http://planebackend:8000/static/;
+    }
 
         add_header X-Content-Type-Options    "nosniff" always;
         add_header Referrer-Policy           "no-referrer-when-downgrade" always;
