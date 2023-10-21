@@ -9,13 +9,7 @@ http {
         root /www/data/;
         access_log /var/log/nginx/access.log;
 
-    client_max_body_size ${FILE_SIZE_LIMIT};
-    location /admin/ {
-        proxy_pass http://planebackend:8000/admin/;
-    }
-    location /static/ {
-        proxy_pass http://planebackend:8000/static/;
-    }
+        client_max_body_size ${FILE_SIZE_LIMIT};
 
         add_header X-Content-Type-Options    "nosniff" always;
         add_header Referrer-Policy           "no-referrer-when-downgrade" always;
@@ -25,9 +19,17 @@ http {
         location / {
             proxy_pass http://web:3000/;
         }
+        location /static/ {
+            proxy_pass http://api:8000/static/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
 
         location /api/ {
             proxy_pass http://api:8000/api/;
+        }
+        location /admin/ {
+            proxy_pass http://api:8000/admin/;
         }
 
         location /spaces/ {

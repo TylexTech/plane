@@ -5,9 +5,8 @@ import { usePopper } from "react-popper";
 // headless ui
 import { Combobox } from "@headlessui/react";
 // icons
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { PriorityIcon } from "components/icons";
+import { Check, ChevronDown, Search } from "lucide-react";
+import { PriorityIcon } from "@plane/ui";
 // components
 import { Tooltip } from "components/ui";
 // types
@@ -51,16 +50,14 @@ export const PrioritySelect: React.FC<Props> = ({
     query: priority,
     content: (
       <div className="flex items-center gap-2">
-        <PriorityIcon priority={priority} className="text-sm" />
+        <PriorityIcon priority={priority} className="h-3.5 w-3.5" />
         {priority ?? "None"}
       </div>
     ),
   }));
 
   const filteredOptions =
-    query === ""
-      ? options
-      : options?.filter((option) => option.query.toLowerCase().includes(query.toLowerCase()));
+    query === "" ? options : options?.filter((option) => option.query.toLowerCase().includes(query.toLowerCase()));
 
   const selectedOption = value ?? "None";
 
@@ -68,15 +65,13 @@ export const PrioritySelect: React.FC<Props> = ({
     <Tooltip tooltipHeading="Priority" tooltipContent={selectedOption} position="top">
       <div
         className={`grid place-items-center rounded "h-6 w-6 border shadow-sm ${
-          value === "urgent"
-            ? "border-red-500/20 bg-red-500"
-            : "border-custom-border-300 bg-custom-background-100"
+          value === "urgent" ? "border-red-500/20 bg-red-500" : "border-custom-border-300 bg-custom-background-100"
         } items-center`}
       >
-        <span className="flex gap-1 items-center text-custom-text-200 text-xs">
+        <span className="flex gap-1 items-center text-custom-text-200 ">
           <PriorityIcon
             priority={value}
-            className={`text-sm ${
+            className={`w-3.5 ${
               value === "urgent"
                 ? "text-white"
                 : value === "high"
@@ -106,15 +101,11 @@ export const PrioritySelect: React.FC<Props> = ({
           ref={setReferenceElement}
           type="button"
           className={`flex items-center justify-between gap-1 w-full text-xs ${
-            disabled
-              ? "cursor-not-allowed text-custom-text-200"
-              : "cursor-pointer hover:bg-custom-background-80"
+            disabled ? "cursor-not-allowed text-custom-text-200" : "cursor-pointer hover:bg-custom-background-80"
           } ${buttonClassName}`}
         >
           {label}
-          {!hideDropdownArrow && !disabled && (
-            <ChevronDownIcon className="h-3 w-3" aria-hidden="true" />
-          )}
+          {!hideDropdownArrow && !disabled && <ChevronDown className="h-3 w-3" aria-hidden="true" />}
         </button>
       </Combobox.Button>
       <Combobox.Options>
@@ -125,7 +116,7 @@ export const PrioritySelect: React.FC<Props> = ({
           {...attributes.popper}
         >
           <div className="flex w-full items-center justify-start rounded border border-custom-border-200 bg-custom-background-90 px-2">
-            <MagnifyingGlassIcon className="h-3.5 w-3.5 text-custom-text-300" />
+            <Search className="h-3.5 w-3.5 text-custom-text-300" />
             <Combobox.Input
               className="w-full bg-transparent py-1 px-2 text-xs text-custom-text-200 placeholder:text-custom-text-400 focus:outline-none"
               value={query}
@@ -150,7 +141,7 @@ export const PrioritySelect: React.FC<Props> = ({
                     {({ selected }) => (
                       <>
                         {option.content}
-                        {selected && <CheckIcon className={`h-3.5 w-3.5`} />}
+                        {selected && <Check className="h-3.5 w-3.5" />}
                       </>
                     )}
                   </Combobox.Option>

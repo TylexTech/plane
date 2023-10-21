@@ -1,36 +1,28 @@
-// react
 import React, { useState } from "react";
-
-// next
 import { useRouter } from "next/router";
-
-// swr
 import useSWR, { mutate } from "swr";
 
 // icons
 import { X, PlusIcon } from "lucide-react";
-
 // services
-import issuesService from "services/issues.service";
-
+import { IssueService } from "services/issue";
 // fetch key
 import { SUB_ISSUES } from "constants/fetch-keys";
-
 // hooks
 import useUser from "hooks/use-user";
-
 // ui
 import { Spinner } from "components/ui";
-
 // components
 import { Label, IssuesSelectBottomSheet, DeleteConfirmation } from "components/web-view";
-
 // types
 import { IIssue, ISearchIssueResponse } from "types";
 
 type Props = {
   issueDetails?: IIssue;
 };
+
+// services
+const issueService = new IssueService();
 
 export const SubIssueList: React.FC<Props> = (props) => {
   const { issueDetails } = props;
@@ -48,8 +40,7 @@ export const SubIssueList: React.FC<Props> = (props) => {
   const { data: subIssuesResponse } = useSWR(
     workspaceSlug && issueDetails ? SUB_ISSUES(issueDetails.id) : null,
     workspaceSlug && issueDetails
-      ? () =>
-          issuesService.subIssues(workspaceSlug as string, issueDetails.project, issueDetails.id)
+      ? () => issueService.subIssues(workspaceSlug as string, issueDetails.project, issueDetails.id)
       : null
   );
 
@@ -74,7 +65,7 @@ export const SubIssueList: React.FC<Props> = (props) => {
       false
     );
 
-    issuesService
+    issueService
       .patchIssue(workspaceSlug.toString(), issue.project, issue.id, { parent: null }, user)
       .finally(() => mutate(SUB_ISSUES(issueDetails.id)));
   };
@@ -85,7 +76,7 @@ export const SubIssueList: React.FC<Props> = (props) => {
     const payload = {
       sub_issue_ids: data.map((i) => i.id),
     };
-    await issuesService
+    await issueService
       .addSubIssues(workspaceSlug.toString(), projectId.toString(), issueId.toString(), payload)
       .finally(() => {
         mutate(SUB_ISSUES(issueId.toString()));
@@ -130,11 +121,11 @@ export const SubIssueList: React.FC<Props> = (props) => {
 
         {subIssuesResponse?.sub_issues?.map((subIssue) => (
           <div key={subIssue.id} className="flex items-center justify-between gap-2 py-2">
-            <div className="flex items-center">
+            <div className="grid grid-flow-col ">
               <p className="mr-3 text-sm text-custom-text-300">
                 {subIssue.project_detail.identifier}-{subIssue.sequence_id}
               </p>
-              <p className="text-sm font-normal">{subIssue.name}</p>
+              <p className="text-sm font-normal truncate ">{subIssue.name}</p>
             </div>
             <button
               type="button"
@@ -144,7 +135,7 @@ export const SubIssueList: React.FC<Props> = (props) => {
                 setIssueSelectedForDelete(subIssue);
               }}
             >
-              <X className="w-[18px] h-[18px] text-custom-text-400" />
+              <X className="w-4 h-4 text-custom-text-400" />
             </button>
           </div>
         ))}
@@ -155,7 +146,7 @@ export const SubIssueList: React.FC<Props> = (props) => {
         onClick={() => setIsBottomSheetOpen(true)}
         className="flex items-center gap-x-1 mt-3"
       >
-        <PlusIcon className="w-[18px] h-[18px] text-custom-text-400" />
+        <PlusIcon className="w-4 h-4 text-custom-text-400" />
         <p className="text-sm text-custom-text-400">Add sub issue</p>
       </button>
     </div>

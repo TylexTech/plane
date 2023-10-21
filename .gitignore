@@ -77,7 +77,7 @@ pnpm-workspace.yaml
 
 
 
-## packages
-dist
 apiserver/plane/static-assets
 
+## packages
+dist
