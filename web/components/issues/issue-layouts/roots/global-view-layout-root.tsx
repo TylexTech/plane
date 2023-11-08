@@ -5,7 +5,9 @@ import useSWR from "swr";
 // mobx store
 import { useMobxStore } from "lib/mobx/store-provider";
 // components
-import { GlobalViewsAppliedFiltersRoot, SpreadsheetView } from "components/issues";
+import { GlobalViewEmptyState, GlobalViewsAppliedFiltersRoot, SpreadsheetView } from "components/issues";
+// ui
+import { Spinner } from "@plane/ui";
 // types
 import { IIssue, IIssueDisplayFilterOptions, TStaticViewTypes } from "types";
 
@@ -25,11 +27,15 @@ export const GlobalViewLayoutRoot: React.FC<Props> = observer((props) => {
     globalViewFilters: globalViewFiltersStore,
     workspaceFilter: workspaceFilterStore,
     workspace: workspaceStore,
+    issueDetail: issueDetailStore,
+    project: projectStore,
   } = useMobxStore();
 
   const viewDetails = globalViewId ? globalViewsStore.globalViewDetails[globalViewId.toString()] : undefined;
 
   const storedFilters = globalViewId ? globalViewFiltersStore.storedFilters[globalViewId.toString()] : undefined;
+
+  const projects = workspaceSlug ? projectStore.projects[workspaceSlug.toString()] : null;
 
   useSWR(
     workspaceSlug && globalViewId && viewDetails ? `GLOBAL_VIEW_ISSUES_${globalViewId.toString()}` : null,
@@ -64,12 +70,15 @@ export const GlobalViewLayoutRoot: React.FC<Props> = observer((props) => {
     (issue: IIssue, data: Partial<IIssue>) => {
       if (!workspaceSlug) return;
 
-      console.log("issue", issue);
-      console.log("data", data);
+      const payload = {
+        ...issue,
+        ...data,
+      };
 
-      // TODO: add update issue logic here
+      globalViewIssuesStore.updateIssueStructure(type ?? globalViewId!.toString(), payload);
+      issueDetailStore.updateIssue(workspaceSlug.toString(), issue.project, issue.id, data);
     },
-    [workspaceSlug]
+    [globalViewId, globalViewIssuesStore, workspaceSlug, issueDetailStore]
   );
 
   const issues = type
@@ -78,22 +87,33 @@ export const GlobalViewLayoutRoot: React.FC<Props> = observer((props) => {
     ? globalViewIssuesStore.viewIssues?.[globalViewId.toString()]
     : undefined;
 
+  if (!issues)
+    return (
+      <div className="h-full w-full grid place-items-center">
+        <Spinner />
+      </div>
+    );
+
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
       <GlobalViewsAppliedFiltersRoot />
-      <div className="h-full w-full overflow-auto">
-        <SpreadsheetView
-          displayProperties={workspaceFilterStore.workspaceDisplayProperties}
-          displayFilters={workspaceFilterStore.workspaceDisplayFilters}
-          handleDisplayFilterUpdate={handleDisplayFiltersUpdate}
-          issues={issues}
-          members={workspaceStore.workspaceMembers ? workspaceStore.workspaceMembers.map((m) => m.member) : undefined}
-          labels={workspaceStore.workspaceLabels ? workspaceStore.workspaceLabels : undefined}
-          handleIssueAction={() => {}}
-          handleUpdateIssue={handleUpdateIssue}
-          disableUserActions={false}
-        />
-      </div>
+      {issues?.length === 0 || !projects || projects?.length === 0 ? (
+        <GlobalViewEmptyState />
+      ) : (
+        <div className="h-full w-full overflow-auto">
+          <SpreadsheetView
+            displayProperties={workspaceFilterStore.workspaceDisplayProperties}
+            displayFilters={workspaceFilterStore.workspaceDisplayFilters}
+            handleDisplayFilterUpdate={handleDisplayFiltersUpdate}
+            issues={issues}
+            members={workspaceStore.workspaceMembers ? workspaceStore.workspaceMembers.map((m) => m.member) : undefined}
+            labels={workspaceStore.workspaceLabels ? workspaceStore.workspaceLabels : undefined}
+            handleIssueAction={() => {}}
+            handleUpdateIssue={handleUpdateIssue}
+            disableUserActions={false}
+          />
+        </div>
+      )}
     </div>
   );
 });

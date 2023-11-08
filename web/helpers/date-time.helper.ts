@@ -172,6 +172,18 @@ export const renderShortDate = (date: string | Date, placeholder?: string) => {
   return isNaN(date.getTime()) ? placeholder ?? "N/A" : `${day} ${month}`;
 };
 
+export const renderShortMonthDate = (date: string | Date, placeholder?: string) => {
+  if (!date || date === "") return null;
+
+  date = new Date(date);
+
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return isNaN(date.getTime()) ? placeholder ?? "N/A" : `${month} ${year}`;
+};
+
 export const render12HourFormatTime = (date: string | Date): string => {
   if (!date || date === "") return "";
 
@@ -361,7 +373,7 @@ export const findTotalDaysInRange = (startDate: Date | string, endDate: Date | s
 
   // find number of days between startDate and endDate
   const diffInTime = endDate.getTime() - startDate.getTime();
-  const diffInDays = diffInTime / (1000 * 3600 * 24);
+  const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
 
   // if inclusive is true, add 1 to diffInDays
   if (inclusive) return diffInDays + 1;

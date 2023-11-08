@@ -1,5 +1,6 @@
 import { enableStaticRendering } from "mobx-react-lite";
 // store imports
+import AppConfigStore, { IAppConfigStore } from "./app-config.store";
 import CommandPaletteStore, { ICommandPaletteStore } from "./command-palette.store";
 import UserStore, { IUserStore } from "store/user.store";
 import ThemeStore, { IThemeStore } from "store/theme.store";
@@ -15,9 +16,22 @@ import {
   IIssueCalendarViewStore,
   IssueCalendarViewStore,
   IssueStore,
+  IIssueQuickAddStore,
+  IssueQuickAddStore,
 } from "store/issue";
 import { IWorkspaceFilterStore, IWorkspaceStore, WorkspaceFilterStore, WorkspaceStore } from "store/workspace";
-import { IProjectPublishStore, IProjectStore, ProjectPublishStore, ProjectStore } from "store/project";
+import {
+  IProjectPublishStore,
+  IProjectStore,
+  ProjectPublishStore,
+  ProjectStore,
+  IProjectStateStore,
+  ProjectStateStore,
+  IProjectLabelStore,
+  ProjectLabelStore,
+  ProjectEstimatesStore,
+  IProjectEstimateStore,
+} from "store/project";
 import {
   IModuleFilterStore,
   IModuleIssueKanBanViewStore,
@@ -72,6 +86,8 @@ import {
   IArchivedIssueStore,
   ArchivedIssueFilterStore,
   IArchivedIssueFilterStore,
+  ArchivedIssueDetailStore,
+  IArchivedIssueDetailStore,
 } from "store/archived-issues";
 import { DraftIssueStore, IDraftIssueStore, DraftIssueFilterStore, IDraftIssueFilterStore } from "store/draft-issues";
 import {
@@ -85,11 +101,14 @@ import {
   InboxStore,
 } from "store/inbox";
 
+import { IMentionsStore, MentionsStore } from "store/editor";
+
 enableStaticRendering(typeof window === "undefined");
 
 export class RootStore {
   user: IUserStore;
   theme: IThemeStore;
+  appConfig: IAppConfigStore;
 
   commandPalette: ICommandPaletteStore;
   workspace: IWorkspaceStore;
@@ -97,6 +116,9 @@ export class RootStore {
 
   projectPublish: IProjectPublishStore;
   project: IProjectStore;
+  projectState: IProjectStateStore;
+  projectLabel: IProjectLabelStore;
+  projectEstimates: IProjectEstimateStore;
   issue: IIssueStore;
 
   module: IModuleStore;
@@ -121,6 +143,7 @@ export class RootStore {
   issueKanBanView: IIssueKanBanViewStore;
   issueCalendarView: IIssueCalendarViewStore;
   draftIssuesStore: DraftIssuesStore;
+  quickAddIssue: IIssueQuickAddStore;
 
   calendar: ICalendarStore;
 
@@ -132,6 +155,7 @@ export class RootStore {
   profileIssueFilters: IProfileIssueFilterStore;
 
   archivedIssues: IArchivedIssueStore;
+  archivedIssueDetail: IArchivedIssueDetailStore;
   archivedIssueFilters: IArchivedIssueFilterStore;
 
   draftIssues: IDraftIssueStore;
@@ -142,7 +166,10 @@ export class RootStore {
   inboxIssueDetails: IInboxIssueDetailsStore;
   inboxFilters: IInboxFiltersStore;
 
+  mentionsStore: IMentionsStore;
+
   constructor() {
+    this.appConfig = new AppConfigStore(this);
     this.commandPalette = new CommandPaletteStore(this);
     this.user = new UserStore(this);
     this.theme = new ThemeStore(this);
@@ -151,6 +178,9 @@ export class RootStore {
     this.workspaceFilter = new WorkspaceFilterStore(this);
 
     this.project = new ProjectStore(this);
+    this.projectState = new ProjectStateStore(this);
+    this.projectLabel = new ProjectLabelStore(this);
+    this.projectEstimates = new ProjectEstimatesStore(this);
     this.projectPublish = new ProjectPublishStore(this);
 
     this.module = new ModuleStore(this);
@@ -176,6 +206,7 @@ export class RootStore {
     this.issueKanBanView = new IssueKanBanViewStore(this);
     this.issueCalendarView = new IssueCalendarViewStore(this);
     this.draftIssuesStore = new DraftIssuesStore(this);
+    this.quickAddIssue = new IssueQuickAddStore(this);
 
     this.calendar = new CalendarStore(this);
 
@@ -187,6 +218,7 @@ export class RootStore {
     this.profileIssueFilters = new ProfileIssueFilterStore(this);
 
     this.archivedIssues = new ArchivedIssueStore(this);
+    this.archivedIssueDetail = new ArchivedIssueDetailStore(this);
     this.archivedIssueFilters = new ArchivedIssueFilterStore(this);
 
     this.draftIssues = new DraftIssueStore(this);
@@ -196,5 +228,7 @@ export class RootStore {
     this.inboxIssues = new InboxIssuesStore(this);
     this.inboxIssueDetails = new InboxIssueDetailsStore(this);
     this.inboxFilters = new InboxFiltersStore(this);
+
+    this.mentionsStore = new MentionsStore(this);
   }
 }

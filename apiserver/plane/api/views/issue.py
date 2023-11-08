@@ -39,7 +39,6 @@ from plane.api.serializers import (
     IssueActivitySerializer,
     IssueCommentSerializer,
     IssuePropertySerializer,
-    LabelSerializer,
     IssueSerializer,
     LabelSerializer,
     IssueFlatSerializer,
@@ -130,7 +129,7 @@ class IssueViewSet(BaseViewSet):
                     queryset=IssueReaction.objects.select_related("actor"),
                 )
             )
-        )
+        ).distinct()
 
     @method_decorator(gzip_page)
     def list(self, request, slug, project_id):
@@ -229,8 +228,9 @@ class IssueViewSet(BaseViewSet):
             )
 
         if group_by:
+            grouped_results = group_results(issues, group_by, sub_group_by)
             return Response(
-                group_results(issues, group_by, sub_group_by),
+                grouped_results,
                 status=status.HTTP_200_OK,
             )
 
@@ -433,8 +433,9 @@ class UserWorkSpaceIssues(BaseAPIView):
             )
 
         if group_by:
+            grouped_results = group_results(issues, group_by, sub_group_by)
             return Response(
-                group_results(issues, group_by, sub_group_by),
+                grouped_results,
                 status=status.HTTP_200_OK,
             )
 
@@ -597,41 +598,12 @@ class IssueCommentViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class IssuePropertyViewSet(BaseViewSet):
-    serializer_class = IssuePropertySerializer
-    model = IssueProperty
+class IssueUserDisplayPropertyEndpoint(BaseAPIView):
     permission_classes = [
-        ProjectEntityPermission,
+        ProjectLitePermission,
     ]
 
-    filterset_fields = []
-
-    def perform_create(self, serializer):
-        serializer.save(
-            project_id=self.kwargs.get("project_id"), user=self.request.user
-        )
-
-    def get_queryset(self):
-        return self.filter_queryset(
-            super()
-            .get_queryset()
-            .filter(workspace__slug=self.kwargs.get("slug"))
-            .filter(project_id=self.kwargs.get("project_id"))
-            .filter(user=self.request.user)
-            .filter(project__project_projectmember__member=self.request.user)
-            .select_related("project")
-            .select_related("workspace")
-        )
-
-    def list(self, request, slug, project_id):
-        queryset = self.get_queryset()
-        serializer = IssuePropertySerializer(queryset, many=True)
-        return Response(
-            serializer.data[0] if len(serializer.data) > 0 else [],
-            status=status.HTTP_200_OK,
-        )
-
-    def create(self, request, slug, project_id):
+    def post(self, request, slug, project_id):
         issue_property, created = IssueProperty.objects.get_or_create(
             user=request.user,
             project_id=project_id,
@@ -640,14 +612,17 @@ class IssuePropertyViewSet(BaseViewSet):
         if not created:
             issue_property.properties = request.data.get("properties", {})
             issue_property.save()
-
-            serializer = IssuePropertySerializer(issue_property)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
         issue_property.properties = request.data.get("properties", {})
         issue_property.save()
         serializer = IssuePropertySerializer(issue_property)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request, slug, project_id):
+        issue_property, _ = IssueProperty.objects.get_or_create(
+            user=request.user, project_id=project_id
+        )
+        serializer = IssuePropertySerializer(issue_property)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LabelViewSet(BaseViewSet):
@@ -797,6 +772,20 @@ class SubIssuesEndpoint(BaseAPIView):
         _ = Issue.objects.bulk_update(sub_issues, ["parent"], batch_size=10)
 
         updated_sub_issues = Issue.issue_objects.filter(id__in=sub_issue_ids)
+
+        # Track the issue
+        _ = [
+            issue_activity.delay(
+                type="issue.activity.updated",
+                requested_data=json.dumps({"parent": str(issue_id)}),
+                actor_id=str(request.user.id),
+                issue_id=str(sub_issue_id),
+                project_id=str(project_id),
+                current_instance=json.dumps({"parent": str(sub_issue_id)}),
+                epoch=int(timezone.now().timestamp()),
+            )
+            for sub_issue_id in sub_issue_ids
+        ]
 
         return Response(
             IssueFlatSerializer(updated_sub_issues, many=True).data,
@@ -963,8 +952,8 @@ class IssueAttachmentEndpoint(BaseAPIView):
         issue_attachments = IssueAttachment.objects.filter(
             issue_id=issue_id, workspace__slug=slug, project_id=project_id
         )
-        serilaizer = IssueAttachmentSerializer(issue_attachments, many=True)
-        return Response(serilaizer.data, status=status.HTTP_200_OK)
+        serializer = IssueAttachmentSerializer(issue_attachments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class IssueArchiveViewSet(BaseViewSet):
@@ -1110,17 +1099,19 @@ class IssueArchiveViewSet(BaseViewSet):
             archived_at__isnull=False,
             pk=pk,
         )
-        issue.archived_at = None
-        issue.save()
         issue_activity.delay(
             type="issue.activity.updated",
             requested_data=json.dumps({"archived_at": None}),
             actor_id=str(request.user.id),
             issue_id=str(issue.id),
             project_id=str(project_id),
-            current_instance=None,
+            current_instance=json.dumps(
+                IssueSerializer(issue).data, cls=DjangoJSONEncoder
+            ),
             epoch=int(timezone.now().timestamp()),
         )
+        issue.archived_at = None
+        issue.save()
 
         return Response(IssueSerializer(issue).data, status=status.HTTP_200_OK)
 
@@ -1165,9 +1156,7 @@ class IssueSubscriberViewSet(BaseViewSet):
 
     def list(self, request, slug, project_id, issue_id):
         members = (
-            ProjectMember.objects.filter(
-                workspace__slug=slug, project_id=project_id
-            )
+            ProjectMember.objects.filter(workspace__slug=slug, project_id=project_id)
             .annotate(
                 is_subscribed=Exists(
                     IssueSubscriber.objects.filter(
@@ -1416,8 +1405,7 @@ class IssueCommentPublicViewSet(BaseViewSet):
                     )
                     .distinct()
                 ).order_by("created_at")
-            else:
-                return IssueComment.objects.none()
+            return IssueComment.objects.none()
         except ProjectDeployBoard.DoesNotExist:
             return IssueComment.objects.none()
 
@@ -1542,8 +1530,7 @@ class IssueReactionPublicViewSet(BaseViewSet):
                     .order_by("-created_at")
                     .distinct()
                 )
-            else:
-                return IssueReaction.objects.none()
+            return IssueReaction.objects.none()
         except ProjectDeployBoard.DoesNotExist:
             return IssueReaction.objects.none()
 
@@ -1638,8 +1625,7 @@ class CommentReactionPublicViewSet(BaseViewSet):
                     .order_by("-created_at")
                     .distinct()
                 )
-            else:
-                return CommentReaction.objects.none()
+            return CommentReaction.objects.none()
         except ProjectDeployBoard.DoesNotExist:
             return CommentReaction.objects.none()
 
@@ -1733,8 +1719,7 @@ class IssueVotePublicViewSet(BaseViewSet):
                     .filter(workspace__slug=self.kwargs.get("slug"))
                     .filter(project_id=self.kwargs.get("project_id"))
                 )
-            else:
-                return IssueVote.objects.none()
+            return IssueVote.objects.none()
         except ProjectDeployBoard.DoesNotExist:
             return IssueVote.objects.none()
 
@@ -2174,7 +2159,11 @@ class IssueDraftViewSet(BaseViewSet):
         ## Grouping the results
         group_by = request.GET.get("group_by", False)
         if group_by:
-            return Response(group_results(issues, group_by), status=status.HTTP_200_OK)
+            grouped_results = group_results(issues, group_by)
+            return Response(
+                grouped_results,
+                status=status.HTTP_200_OK,
+            )
 
         return Response(issues, status=status.HTTP_200_OK)
 
@@ -2241,7 +2230,7 @@ class IssueDraftViewSet(BaseViewSet):
     def destroy(self, request, slug, project_id, pk=None):
         issue = Issue.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
         current_instance = json.dumps(
-            IssueSerializer(current_instance).data, cls=DjangoJSONEncoder
+            IssueSerializer(issue).data, cls=DjangoJSONEncoder
         )
         issue.delete()
         issue_activity.delay(
