@@ -77,5 +77,8 @@ pnpm-workspace.yaml
 .npmrc
 .secrets
 tmp/
+
+apiserver/plane/static-assets
+
 ## packages
 dist
